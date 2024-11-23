@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+service Users {
+  rpc Create(CreateRequest) returns (CreateResponse);
+}
+
+option go_package = "/proto";
+
+message CreateRequest {
+  string name = 1;
+  string passwordHash = 2;
+  string username = 3;
+  string email = 4;
+}
+
+message CreateResponse {
+  int32 id = 1;
+  string name = 2;
+  string passwordHash = 3;
+  string username = 4;
+  string email = 5;
+}
