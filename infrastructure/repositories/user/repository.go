@@ -2,10 +2,10 @@ package user
 
 import (
 	"context"
-	"twitter-users/domain/models"
-	"twitter-users/pkg/database"
-	"twitter-users/schema/gen/my_database/public/model"
-	"twitter-users/schema/gen/my_database/public/table"
+	"github.com/vorotilkin/twitter-users/domain/models"
+	"github.com/vorotilkin/twitter-users/pkg/database"
+	"github.com/vorotilkin/twitter-users/schema/gen/my_database/public/model"
+	"github.com/vorotilkin/twitter-users/schema/gen/my_database/public/table"
 )
 
 type Repository struct {

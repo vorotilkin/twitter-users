@@ -2,18 +2,18 @@ package main
 
 import (
 	"context"
+	"github.com/vorotilkin/twitter-users/infrastructure/repositories/user"
+	"github.com/vorotilkin/twitter-users/interfaces"
+	"github.com/vorotilkin/twitter-users/pkg/configuration"
+	"github.com/vorotilkin/twitter-users/pkg/database"
+	pkgGrpc "github.com/vorotilkin/twitter-users/pkg/grpc"
+	"github.com/vorotilkin/twitter-users/pkg/migration"
+	"github.com/vorotilkin/twitter-users/proto"
+	"github.com/vorotilkin/twitter-users/usecases"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"twitter-users/infrastructure/repositories/user"
-	"twitter-users/interfaces"
-	"twitter-users/pkg/configuration"
-	"twitter-users/pkg/database"
-	pkgGrpc "twitter-users/pkg/grpc"
-	"twitter-users/pkg/migration"
-	"twitter-users/proto"
-	"twitter-users/usecases"
 )
 
 type config struct {

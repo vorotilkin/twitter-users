@@ -2,8 +2,8 @@ package usecases
 
 import (
 	"context"
-	"twitter-users/domain/models"
-	"twitter-users/proto"
+	"github.com/vorotilkin/twitter-users/domain/models"
+	"github.com/vorotilkin/twitter-users/proto"
 )
 
 type UsersRepository interface {

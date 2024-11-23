@@ -1,4 +1,4 @@
-module twitter-users
+module github.com/vorotilkin/twitter-users
 
 go 1.23.1
 

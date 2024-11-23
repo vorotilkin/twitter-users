@@ -1,8 +1,8 @@
 package user
 
 import (
-	"twitter-users/domain/models"
-	"twitter-users/schema/gen/my_database/public/model"
+	"github.com/vorotilkin/twitter-users/domain/models"
+	"github.com/vorotilkin/twitter-users/schema/gen/my_database/public/model"
 )
 
 func toDomain(user model.User) models.User {
