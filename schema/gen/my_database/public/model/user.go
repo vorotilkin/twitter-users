@@ -12,11 +12,17 @@ import (
 )
 
 type User struct {
-	ID           int32 `sql:"primary_key"`
-	Name         string
-	PasswordHash string
-	Username     string
-	Email        string
-	CreatedAt    time.Time
-	UpdatedAt    time.Time
+	ID              int32 `sql:"primary_key"`
+	Name            string
+	PasswordHash    string
+	Username        string
+	Email           string
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+	Bio             *string
+	EmailVerified   *time.Time
+	Image           *string
+	CoverImage      *string
+	ProfileImage    *string
+	HasNotification bool
 }

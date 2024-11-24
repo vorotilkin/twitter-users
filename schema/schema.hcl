@@ -30,6 +30,31 @@ table "user" {
     type    = timestamp
     default = sql("CURRENT_TIMESTAMP")
   }
+  column "bio" {
+    null = true
+    type = text
+  }
+  column "email_verified" {
+    null = true
+    type = timestamp
+  }
+  column "image" {
+    null = true
+    type = text
+  }
+  column "cover_image" {
+    null = true
+    type = text
+  }
+  column "profile_image" {
+    null = true
+    type = text
+  }
+  column "has_notification" {
+    null    = false
+    type    = boolean
+    default = false
+  }
   primary_key {
     columns = [column.id]
   }

@@ -17,13 +17,19 @@ type userTable struct {
 	postgres.Table
 
 	// Columns
-	ID           postgres.ColumnInteger
-	Name         postgres.ColumnString
-	PasswordHash postgres.ColumnString
-	Username     postgres.ColumnString
-	Email        postgres.ColumnString
-	CreatedAt    postgres.ColumnTimestamp
-	UpdatedAt    postgres.ColumnTimestamp
+	ID              postgres.ColumnInteger
+	Name            postgres.ColumnString
+	PasswordHash    postgres.ColumnString
+	Username        postgres.ColumnString
+	Email           postgres.ColumnString
+	CreatedAt       postgres.ColumnTimestamp
+	UpdatedAt       postgres.ColumnTimestamp
+	Bio             postgres.ColumnString
+	EmailVerified   postgres.ColumnTimestamp
+	Image           postgres.ColumnString
+	CoverImage      postgres.ColumnString
+	ProfileImage    postgres.ColumnString
+	HasNotification postgres.ColumnBool
 
 	AllColumns     postgres.ColumnList
 	MutableColumns postgres.ColumnList
@@ -64,28 +70,40 @@ func newUserTable(schemaName, tableName, alias string) *UserTable {
 
 func newUserTableImpl(schemaName, tableName, alias string) userTable {
 	var (
-		IDColumn           = postgres.IntegerColumn("id")
-		NameColumn         = postgres.StringColumn("name")
-		PasswordHashColumn = postgres.StringColumn("password_hash")
-		UsernameColumn     = postgres.StringColumn("username")
-		EmailColumn        = postgres.StringColumn("email")
-		CreatedAtColumn    = postgres.TimestampColumn("created_at")
-		UpdatedAtColumn    = postgres.TimestampColumn("updated_at")
-		allColumns         = postgres.ColumnList{IDColumn, NameColumn, PasswordHashColumn, UsernameColumn, EmailColumn, CreatedAtColumn, UpdatedAtColumn}
-		mutableColumns     = postgres.ColumnList{NameColumn, PasswordHashColumn, UsernameColumn, EmailColumn, CreatedAtColumn, UpdatedAtColumn}
+		IDColumn              = postgres.IntegerColumn("id")
+		NameColumn            = postgres.StringColumn("name")
+		PasswordHashColumn    = postgres.StringColumn("password_hash")
+		UsernameColumn        = postgres.StringColumn("username")
+		EmailColumn           = postgres.StringColumn("email")
+		CreatedAtColumn       = postgres.TimestampColumn("created_at")
+		UpdatedAtColumn       = postgres.TimestampColumn("updated_at")
+		BioColumn             = postgres.StringColumn("bio")
+		EmailVerifiedColumn   = postgres.TimestampColumn("email_verified")
+		ImageColumn           = postgres.StringColumn("image")
+		CoverImageColumn      = postgres.StringColumn("cover_image")
+		ProfileImageColumn    = postgres.StringColumn("profile_image")
+		HasNotificationColumn = postgres.BoolColumn("has_notification")
+		allColumns            = postgres.ColumnList{IDColumn, NameColumn, PasswordHashColumn, UsernameColumn, EmailColumn, CreatedAtColumn, UpdatedAtColumn, BioColumn, EmailVerifiedColumn, ImageColumn, CoverImageColumn, ProfileImageColumn, HasNotificationColumn}
+		mutableColumns        = postgres.ColumnList{NameColumn, PasswordHashColumn, UsernameColumn, EmailColumn, CreatedAtColumn, UpdatedAtColumn, BioColumn, EmailVerifiedColumn, ImageColumn, CoverImageColumn, ProfileImageColumn, HasNotificationColumn}
 	)
 
 	return userTable{
 		Table: postgres.NewTable(schemaName, tableName, alias, allColumns...),
 
 		//Columns
-		ID:           IDColumn,
-		Name:         NameColumn,
-		PasswordHash: PasswordHashColumn,
-		Username:     UsernameColumn,
-		Email:        EmailColumn,
-		CreatedAt:    CreatedAtColumn,
-		UpdatedAt:    UpdatedAtColumn,
+		ID:              IDColumn,
+		Name:            NameColumn,
+		PasswordHash:    PasswordHashColumn,
+		Username:        UsernameColumn,
+		Email:           EmailColumn,
+		CreatedAt:       CreatedAtColumn,
+		UpdatedAt:       UpdatedAtColumn,
+		Bio:             BioColumn,
+		EmailVerified:   EmailVerifiedColumn,
+		Image:           ImageColumn,
+		CoverImage:      CoverImageColumn,
+		ProfileImage:    ProfileImageColumn,
+		HasNotification: HasNotificationColumn,
 
 		AllColumns:     allColumns,
 		MutableColumns: mutableColumns,
