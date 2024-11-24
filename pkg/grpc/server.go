@@ -29,6 +29,8 @@ func (s *Server) OnStart(_ context.Context) error {
 	}
 
 	go func(listener net.Listener) {
+		s.logger.Info("grpc server listening on", zap.String("address", s.config.Address))
+
 		err := s.server.Serve(listener)
 		if err != nil {
 			s.logger.Error("failed to serve", zap.Error(err))

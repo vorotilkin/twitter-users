@@ -1,6 +1,6 @@
 grpc:
   server:
-    address: "localhost:8081"
+    address: "localhost:50051"
 
 db:
   host: db
