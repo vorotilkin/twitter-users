@@ -6,7 +6,7 @@ DB_DATABASE?=my_database
 DB_SCHEMA?=public
 DB_SSL_MODE?=disable
 DB_DSN?=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):$(DB_PORT)/$(DB_DATABASE)?$(if $(DB_SSL_MODE),sslmode=$(DB_SSL_MODE),)
-MIGRATION_NAME?=new_columns
+MIGRATION_NAME?=unique_email
 ATLASGO_BIN?=$(shell which atlas)
 JET_BIN?=$(shell which jet)
 

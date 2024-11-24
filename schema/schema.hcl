@@ -61,6 +61,9 @@ table "user" {
   index "idx_id" {
     columns = [column.id]
   }
+  unique "user_pk" {
+    columns = [column.email]
+  }
 }
 schema "public" {
   comment = "standard public schema"
