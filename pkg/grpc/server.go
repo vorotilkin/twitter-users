@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"net"
@@ -49,7 +50,7 @@ func (s *Server) OnStop(_ context.Context) error {
 func NewServer(c Config, log *zap.Logger) *Server {
 	return &Server{
 		config: c,
-		server: grpc.NewServer(),
+		server: grpc.NewServer(grpc.ChainUnaryInterceptor(grpc_zap.UnaryServerInterceptor(log))),
 		logger: log,
 	}
 }
