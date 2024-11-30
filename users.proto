@@ -1,15 +1,16 @@
 syntax = "proto3";
 
+option go_package = "/proto";
+
 service Users {
   rpc Create(CreateRequest) returns (CreateResponse);
   rpc PasswordHashByEmail(PasswordHashByEmailRequest) returns (PasswordHashByEmailResponse);
+  rpc UserByEmail(UserByEmailRequest) returns (UserByEmailResponse);
 }
-
-option go_package = "/proto";
 
 message CreateRequest {
   string name = 1;
-  string passwordHash = 2;
+  string password_hash = 2;
   string username = 3;
   string email = 4;
 }
@@ -17,7 +18,7 @@ message CreateRequest {
 message CreateResponse {
   int32 id = 1;
   string name = 2;
-  string passwordHash = 3;
+  string password_hash = 3;
   string username = 4;
   string email = 5;
 }
@@ -27,5 +28,17 @@ message PasswordHashByEmailRequest {
 }
 
 message PasswordHashByEmailResponse {
-  string passwordHash = 1;
+  string password_hash = 1;
+}
+
+message UserByEmailRequest {
+  string email = 1;
+}
+
+message UserByEmailResponse {
+  int32 id = 1;
+  string name = 2;
+  string password_hash = 3;
+  string username = 4;
+  string email = 5;
 }
