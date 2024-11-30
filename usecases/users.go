@@ -12,6 +12,7 @@ type UsersRepository interface {
 	Create(ctx context.Context, name, passwordHash, username, email string) (models.User, error)
 	FetchPasswordHashByEmail(ctx context.Context, email string) (string, error)
 	UserByEmail(ctx context.Context, email string) (models.User, error)
+	UserByID(ctx context.Context, id int32) (models.User, error)
 }
 
 type UsersServer struct {
@@ -26,11 +27,7 @@ func (s *UsersServer) Create(ctx context.Context, request *proto.CreateRequest) 
 	}
 
 	return &proto.CreateResponse{
-		Id:           user.ID,
-		Name:         user.Name,
-		PasswordHash: user.PasswordHash,
-		Username:     user.Username,
-		Email:        user.Email,
+		User: toProtoUser(user),
 	}, nil
 }
 
@@ -58,16 +55,37 @@ func (s *UsersServer) UserByEmail(ctx context.Context, request *proto.UserByEmai
 	}
 
 	return &proto.UserByEmailResponse{
-		Id:           user.ID,
-		Username:     user.Username,
-		Email:        user.Email,
-		PasswordHash: user.PasswordHash,
-		Name:         user.Name,
+		User: toProtoUser(user),
+	}, nil
+}
+
+func (s *UsersServer) UserByID(ctx context.Context, request *proto.UserByIDRequest) (*proto.UserByIDResponse, error) {
+	user, err := s.usersRepository.UserByID(ctx, request.GetId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if user.ID == 0 {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &proto.UserByIDResponse{
+		User: toProtoUser(user),
 	}, nil
 }
 
 func NewUsersServer(usersRepo UsersRepository) *UsersServer {
 	return &UsersServer{
 		usersRepository: usersRepo,
+	}
+}
+
+func toProtoUser(user models.User) *proto.User {
+	return &proto.User{
+		Id:           user.ID,
+		Name:         user.Name,
+		PasswordHash: user.PasswordHash,
+		Username:     user.Username,
+		Email:        user.Email,
 	}
 }

@@ -15,6 +15,35 @@ type Repository struct {
 	conn *database.Database
 }
 
+func (r *Repository) UserByID(ctx context.Context, id int32) (models.User, error) {
+	query, args := table.User.
+		SELECT(
+			table.User.ID,
+			table.User.Name,
+			table.User.PasswordHash,
+			table.User.Username,
+			table.User.Email,
+		).
+		WHERE(table.User.ID.EQ(postgres.Int(int64(id)))).
+		Sql()
+
+	row := r.conn.QueryRow(ctx, query, args...)
+	user := model.User{}
+
+	err := row.Scan(
+		&user.ID,
+		&user.Name,
+		&user.PasswordHash,
+		&user.Username,
+		&user.Email,
+	)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+		return models.User{}, err
+	}
+
+	return toDomain(user), nil
+}
+
 func (r *Repository) UserByEmail(ctx context.Context, email string) (models.User, error) {
 	query, args := table.User.
 		SELECT(
