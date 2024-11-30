@@ -7,6 +7,7 @@ service Users {
   rpc PasswordHashByEmail(PasswordHashByEmailRequest) returns (PasswordHashByEmailResponse);
   rpc UserByEmail(UserByEmailRequest) returns (UserByEmailResponse);
   rpc UserByID(UserByIDRequest) returns (UserByIDResponse);
+  rpc UpdateByID(UpdateByIDRequest) returns (UpdateByIDResponse);
 }
 
 message User {
@@ -15,6 +16,9 @@ message User {
   string password_hash = 3;
   string username = 4;
   string email = 5;
+  string bio = 6;
+  string profile_image = 7;
+  string cover_image = 8;
 }
 
 message CreateRequest {
@@ -49,5 +53,18 @@ message UserByIDRequest {
 }
 
 message UserByIDResponse {
+  User user = 1;
+}
+
+message UpdateByIDRequest {
+  int32 id = 1;
+  optional string name = 2;
+  optional string username = 3;
+  optional string bio = 4;
+  optional string profile_image = 6;
+  optional string cover_image = 7;
+}
+
+message UpdateByIDResponse {
   User user = 1;
 }

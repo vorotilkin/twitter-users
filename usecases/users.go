@@ -2,8 +2,11 @@ package usecases
 
 import (
 	"context"
+	"errors"
+	"github.com/samber/mo"
 	"github.com/vorotilkin/twitter-users/domain/models"
 	"github.com/vorotilkin/twitter-users/proto"
+	"github.com/vorotilkin/twitter-users/usecases/hydrators"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
@@ -13,6 +16,7 @@ type UsersRepository interface {
 	FetchPasswordHashByEmail(ctx context.Context, email string) (string, error)
 	UserByEmail(ctx context.Context, email string) (models.User, error)
 	UserByID(ctx context.Context, id int32) (models.User, error)
+	UpdateByID(ctx context.Context, userToUpdate models.UserOption) (bool, error)
 }
 
 type UsersServer struct {
@@ -27,7 +31,7 @@ func (s *UsersServer) Create(ctx context.Context, request *proto.CreateRequest) 
 	}
 
 	return &proto.CreateResponse{
-		User: toProtoUser(user),
+		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
@@ -55,7 +59,7 @@ func (s *UsersServer) UserByEmail(ctx context.Context, request *proto.UserByEmai
 	}
 
 	return &proto.UserByEmailResponse{
-		User: toProtoUser(user),
+		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
@@ -70,22 +74,56 @@ func (s *UsersServer) UserByID(ctx context.Context, request *proto.UserByIDReque
 	}
 
 	return &proto.UserByIDResponse{
-		User: toProtoUser(user),
+		User: hydrators.ProtoUser(user),
+	}, nil
+}
+
+func (s *UsersServer) UpdateByID(ctx context.Context, request *proto.UpdateByIDRequest) (*proto.UpdateByIDResponse, error) {
+	if request == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	if request.GetId() <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid id")
+	}
+
+	userToUpdate := models.UserOption{
+		ID:           request.GetId(),
+		Name:         mo.PointerToOption(request.Name),
+		Username:     mo.PointerToOption(request.Username),
+		Bio:          mo.PointerToOption(request.Bio),
+		ProfileImage: mo.PointerToOption(request.ProfileImage),
+		CoverImage:   mo.PointerToOption(request.CoverImage),
+	}
+
+	ok, err := s.usersRepository.UpdateByID(ctx, userToUpdate)
+	if errors.Is(err, models.ErrNothingToUpdate) {
+		return nil, status.Error(codes.InvalidArgument, "nothing to update")
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if !ok {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	user, err := s.usersRepository.UserByID(ctx, request.GetId())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	if user.ID == 0 {
+		return nil, status.Error(codes.NotFound, "user not found")
+	}
+
+	return &proto.UpdateByIDResponse{
+		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
 func NewUsersServer(usersRepo UsersRepository) *UsersServer {
 	return &UsersServer{
 		usersRepository: usersRepo,
-	}
-}
-
-func toProtoUser(user models.User) *proto.User {
-	return &proto.User{
-		Id:           user.ID,
-		Name:         user.Name,
-		PasswordHash: user.PasswordHash,
-		Username:     user.Username,
-		Email:        user.Email,
 	}
 }

@@ -23,6 +23,7 @@ const (
 	Users_PasswordHashByEmail_FullMethodName = "/Users/PasswordHashByEmail"
 	Users_UserByEmail_FullMethodName         = "/Users/UserByEmail"
 	Users_UserByID_FullMethodName            = "/Users/UserByID"
+	Users_UpdateByID_FullMethodName          = "/Users/UpdateByID"
 )
 
 // UsersClient is the client API for Users service.
@@ -33,6 +34,7 @@ type UsersClient interface {
 	PasswordHashByEmail(ctx context.Context, in *PasswordHashByEmailRequest, opts ...grpc.CallOption) (*PasswordHashByEmailResponse, error)
 	UserByEmail(ctx context.Context, in *UserByEmailRequest, opts ...grpc.CallOption) (*UserByEmailResponse, error)
 	UserByID(ctx context.Context, in *UserByIDRequest, opts ...grpc.CallOption) (*UserByIDResponse, error)
+	UpdateByID(ctx context.Context, in *UpdateByIDRequest, opts ...grpc.CallOption) (*UpdateByIDResponse, error)
 }
 
 type usersClient struct {
@@ -83,6 +85,16 @@ func (c *usersClient) UserByID(ctx context.Context, in *UserByIDRequest, opts ..
 	return out, nil
 }
 
+func (c *usersClient) UpdateByID(ctx context.Context, in *UpdateByIDRequest, opts ...grpc.CallOption) (*UpdateByIDResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(UpdateByIDResponse)
+	err := c.cc.Invoke(ctx, Users_UpdateByID_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServer is the server API for Users service.
 // All implementations must embed UnimplementedUsersServer
 // for forward compatibility.
@@ -91,6 +103,7 @@ type UsersServer interface {
 	PasswordHashByEmail(context.Context, *PasswordHashByEmailRequest) (*PasswordHashByEmailResponse, error)
 	UserByEmail(context.Context, *UserByEmailRequest) (*UserByEmailResponse, error)
 	UserByID(context.Context, *UserByIDRequest) (*UserByIDResponse, error)
+	UpdateByID(context.Context, *UpdateByIDRequest) (*UpdateByIDResponse, error)
 	mustEmbedUnimplementedUsersServer()
 }
 
@@ -112,6 +125,9 @@ func (UnimplementedUsersServer) UserByEmail(context.Context, *UserByEmailRequest
 }
 func (UnimplementedUsersServer) UserByID(context.Context, *UserByIDRequest) (*UserByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserByID not implemented")
+}
+func (UnimplementedUsersServer) UpdateByID(context.Context, *UpdateByIDRequest) (*UpdateByIDResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateByID not implemented")
 }
 func (UnimplementedUsersServer) mustEmbedUnimplementedUsersServer() {}
 func (UnimplementedUsersServer) testEmbeddedByValue()               {}
@@ -206,6 +222,24 @@ func _Users_UserByID_Handler(srv interface{}, ctx context.Context, dec func(inte
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Users_UpdateByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateByIDRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServer).UpdateByID(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Users_UpdateByID_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServer).UpdateByID(ctx, req.(*UpdateByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Users_ServiceDesc is the grpc.ServiceDesc for Users service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -228,6 +262,10 @@ var Users_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UserByID",
 			Handler:    _Users_UserByID_Handler,
+		},
+		{
+			MethodName: "UpdateByID",
+			Handler:    _Users_UpdateByID_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

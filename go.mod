@@ -9,6 +9,8 @@ require (
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pkg/errors v0.9.1
+	github.com/samber/lo v1.47.0
+	github.com/samber/mo v1.13.0
 	github.com/spf13/viper v1.19.0
 	go.uber.org/fx v1.23.0
 	go.uber.org/zap v1.26.0
