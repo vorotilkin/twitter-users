@@ -11,6 +11,7 @@ type User struct {
 	Bio          string
 	ProfileImage string
 	CoverImage   string
+	FollowingIDs []int32
 }
 
 type UserOption struct {

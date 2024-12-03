@@ -71,7 +71,17 @@ func columnsAndModelToUpdate(userToUpdate models.UserOption) (postgres.ColumnLis
 	return columns, user
 }
 
-func (r *Repository) UserByID(ctx context.Context, id int32) (models.User, error) {
+func (r *Repository) UsersByIDs(ctx context.Context, ids []int32) ([]models.User, error) {
+	userIDs := lo.Map(ids, func(id int32, _ int) postgres.Expression {
+		return postgres.Int(int64(id))
+	})
+
+	followingSubquery :=
+		table.Follow.SELECT(
+			postgres.Raw("ARRAY_AGG(follow.following_user_id)")).WHERE(
+			table.Follow.UserID.EQ(table.User.ID),
+		)
+
 	query, args := table.User.
 		SELECT(
 			table.User.ID,
@@ -82,28 +92,43 @@ func (r *Repository) UserByID(ctx context.Context, id int32) (models.User, error
 			table.User.Bio,
 			table.User.ProfileImage,
 			table.User.CoverImage,
+			followingSubquery.AS("following_ids"),
 		).
-		WHERE(table.User.ID.EQ(postgres.Int(int64(id)))).
+		WHERE(table.User.ID.IN(userIDs...)).
 		Sql()
 
-	row := r.conn.QueryRow(ctx, query, args...)
-	user := model.User{}
-
-	err := row.Scan(
-		&user.ID,
-		&user.Name,
-		&user.PasswordHash,
-		&user.Username,
-		&user.Email,
-		&user.Bio,
-		&user.ProfileImage,
-		&user.CoverImage,
-	)
-	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
-		return models.User{}, err
+	rows, err := r.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
 	}
 
-	return toDomain(user), nil
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.User, error) {
+		user := model.User{}
+
+		var followingIDs []int32
+
+		err := row.Scan(
+			&user.ID,
+			&user.Name,
+			&user.PasswordHash,
+			&user.Username,
+			&user.Email,
+			&user.Bio,
+			&user.ProfileImage,
+			&user.CoverImage,
+			&followingIDs,
+		)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return models.User{}, err
+		}
+
+		return toDomain(user, followingIDs), nil
+	})
 }
 
 func (r *Repository) UserByEmail(ctx context.Context, email string) (models.User, error) {
@@ -138,7 +163,7 @@ func (r *Repository) UserByEmail(ctx context.Context, email string) (models.User
 		return models.User{}, err
 	}
 
-	return toDomain(user), nil
+	return toDomain(user, nil), nil
 }
 
 func (r *Repository) Create(ctx context.Context, name, passwordHash, username, email string) (models.User, error) {
@@ -173,7 +198,7 @@ func (r *Repository) Create(ctx context.Context, name, passwordHash, username, e
 		return models.User{}, err
 	}
 
-	return toDomain(user), nil
+	return toDomain(user, nil), nil
 }
 
 func (r *Repository) FetchPasswordHashByEmail(ctx context.Context, email string) (string, error) {
@@ -193,6 +218,41 @@ func (r *Repository) FetchPasswordHashByEmail(ctx context.Context, email string)
 	}
 
 	return user.PasswordHash, nil
+}
+
+func (r *Repository) Follow(ctx context.Context, userID, targetUserID int32) (bool, error) {
+	query, args := table.Follow.
+		INSERT(table.Follow.UserID, table.Follow.FollowingUserID).
+		MODEL(model.Follow{
+			UserID:          userID,
+			FollowingUserID: targetUserID,
+		}).
+		Sql()
+
+	commandTag, err := r.conn.Exec(ctx, query, args...)
+	if err != nil {
+		return false, err
+	}
+
+	return commandTag.RowsAffected() > 0, nil
+}
+
+func (r *Repository) Unfollow(ctx context.Context, userID, targetUserID int32) (bool, error) {
+	query, args := table.Follow.
+		DELETE().WHERE(
+		table.Follow.UserID.EQ(postgres.Int(int64(userID))).
+			AND(
+				table.Follow.FollowingUserID.EQ(postgres.Int(int64(targetUserID))),
+			),
+	).
+		Sql()
+
+	commandTag, err := r.conn.Exec(ctx, query, args...)
+	if err != nil {
+		return false, err
+	}
+
+	return commandTag.RowsAffected() > 0, nil
 }
 
 func NewRepository(conn *database.Database) *Repository {

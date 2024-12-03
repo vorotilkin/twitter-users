@@ -22,8 +22,9 @@ const (
 	Users_Create_FullMethodName              = "/users.Users/Create"
 	Users_PasswordHashByEmail_FullMethodName = "/users.Users/PasswordHashByEmail"
 	Users_UserByEmail_FullMethodName         = "/users.Users/UserByEmail"
-	Users_UserByID_FullMethodName            = "/users.Users/UserByID"
+	Users_UsersByIDs_FullMethodName          = "/users.Users/UsersByIDs"
 	Users_UpdateByID_FullMethodName          = "/users.Users/UpdateByID"
+	Users_Follow_FullMethodName              = "/users.Users/Follow"
 )
 
 // UsersClient is the client API for Users service.
@@ -33,8 +34,9 @@ type UsersClient interface {
 	Create(ctx context.Context, in *CreateRequest, opts ...grpc.CallOption) (*CreateResponse, error)
 	PasswordHashByEmail(ctx context.Context, in *PasswordHashByEmailRequest, opts ...grpc.CallOption) (*PasswordHashByEmailResponse, error)
 	UserByEmail(ctx context.Context, in *UserByEmailRequest, opts ...grpc.CallOption) (*UserByEmailResponse, error)
-	UserByID(ctx context.Context, in *UserByIDRequest, opts ...grpc.CallOption) (*UserByIDResponse, error)
+	UsersByIDs(ctx context.Context, in *UsersByIDsRequest, opts ...grpc.CallOption) (*UsersByIDsResponse, error)
 	UpdateByID(ctx context.Context, in *UpdateByIDRequest, opts ...grpc.CallOption) (*UpdateByIDResponse, error)
+	Follow(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowResponse, error)
 }
 
 type usersClient struct {
@@ -75,10 +77,10 @@ func (c *usersClient) UserByEmail(ctx context.Context, in *UserByEmailRequest, o
 	return out, nil
 }
 
-func (c *usersClient) UserByID(ctx context.Context, in *UserByIDRequest, opts ...grpc.CallOption) (*UserByIDResponse, error) {
+func (c *usersClient) UsersByIDs(ctx context.Context, in *UsersByIDsRequest, opts ...grpc.CallOption) (*UsersByIDsResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(UserByIDResponse)
-	err := c.cc.Invoke(ctx, Users_UserByID_FullMethodName, in, out, cOpts...)
+	out := new(UsersByIDsResponse)
+	err := c.cc.Invoke(ctx, Users_UsersByIDs_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -95,6 +97,16 @@ func (c *usersClient) UpdateByID(ctx context.Context, in *UpdateByIDRequest, opt
 	return out, nil
 }
 
+func (c *usersClient) Follow(ctx context.Context, in *FollowRequest, opts ...grpc.CallOption) (*FollowResponse, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(FollowResponse)
+	err := c.cc.Invoke(ctx, Users_Follow_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // UsersServer is the server API for Users service.
 // All implementations must embed UnimplementedUsersServer
 // for forward compatibility.
@@ -102,8 +114,9 @@ type UsersServer interface {
 	Create(context.Context, *CreateRequest) (*CreateResponse, error)
 	PasswordHashByEmail(context.Context, *PasswordHashByEmailRequest) (*PasswordHashByEmailResponse, error)
 	UserByEmail(context.Context, *UserByEmailRequest) (*UserByEmailResponse, error)
-	UserByID(context.Context, *UserByIDRequest) (*UserByIDResponse, error)
+	UsersByIDs(context.Context, *UsersByIDsRequest) (*UsersByIDsResponse, error)
 	UpdateByID(context.Context, *UpdateByIDRequest) (*UpdateByIDResponse, error)
+	Follow(context.Context, *FollowRequest) (*FollowResponse, error)
 	mustEmbedUnimplementedUsersServer()
 }
 
@@ -123,11 +136,14 @@ func (UnimplementedUsersServer) PasswordHashByEmail(context.Context, *PasswordHa
 func (UnimplementedUsersServer) UserByEmail(context.Context, *UserByEmailRequest) (*UserByEmailResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UserByEmail not implemented")
 }
-func (UnimplementedUsersServer) UserByID(context.Context, *UserByIDRequest) (*UserByIDResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UserByID not implemented")
+func (UnimplementedUsersServer) UsersByIDs(context.Context, *UsersByIDsRequest) (*UsersByIDsResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UsersByIDs not implemented")
 }
 func (UnimplementedUsersServer) UpdateByID(context.Context, *UpdateByIDRequest) (*UpdateByIDResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateByID not implemented")
+}
+func (UnimplementedUsersServer) Follow(context.Context, *FollowRequest) (*FollowResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Follow not implemented")
 }
 func (UnimplementedUsersServer) mustEmbedUnimplementedUsersServer() {}
 func (UnimplementedUsersServer) testEmbeddedByValue()               {}
@@ -204,20 +220,20 @@ func _Users_UserByEmail_Handler(srv interface{}, ctx context.Context, dec func(i
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Users_UserByID_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UserByIDRequest)
+func _Users_UsersByIDs_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UsersByIDsRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(UsersServer).UserByID(ctx, in)
+		return srv.(UsersServer).UsersByIDs(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Users_UserByID_FullMethodName,
+		FullMethod: Users_UsersByIDs_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UsersServer).UserByID(ctx, req.(*UserByIDRequest))
+		return srv.(UsersServer).UsersByIDs(ctx, req.(*UsersByIDsRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -236,6 +252,24 @@ func _Users_UpdateByID_Handler(srv interface{}, ctx context.Context, dec func(in
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(UsersServer).UpdateByID(ctx, req.(*UpdateByIDRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Users_Follow_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(FollowRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(UsersServer).Follow(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: Users_Follow_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(UsersServer).Follow(ctx, req.(*FollowRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -260,12 +294,16 @@ var Users_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Users_UserByEmail_Handler,
 		},
 		{
-			MethodName: "UserByID",
-			Handler:    _Users_UserByID_Handler,
+			MethodName: "UsersByIDs",
+			Handler:    _Users_UsersByIDs_Handler,
 		},
 		{
 			MethodName: "UpdateByID",
 			Handler:    _Users_UpdateByID_Handler,
+		},
+		{
+			MethodName: "Follow",
+			Handler:    _Users_Follow_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

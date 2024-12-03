@@ -3,6 +3,7 @@ package usecases
 import (
 	"context"
 	"errors"
+	"github.com/samber/lo"
 	"github.com/samber/mo"
 	"github.com/vorotilkin/twitter-users/domain/models"
 	"github.com/vorotilkin/twitter-users/proto"
@@ -15,8 +16,10 @@ type UsersRepository interface {
 	Create(ctx context.Context, name, passwordHash, username, email string) (models.User, error)
 	FetchPasswordHashByEmail(ctx context.Context, email string) (string, error)
 	UserByEmail(ctx context.Context, email string) (models.User, error)
-	UserByID(ctx context.Context, id int32) (models.User, error)
+	UsersByIDs(ctx context.Context, ids []int32) ([]models.User, error)
 	UpdateByID(ctx context.Context, userToUpdate models.UserOption) (bool, error)
+	Follow(ctx context.Context, userID, targetUserID int32) (bool, error)
+	Unfollow(ctx context.Context, userID, targetUserID int32) (bool, error)
 }
 
 type UsersServer struct {
@@ -63,18 +66,19 @@ func (s *UsersServer) UserByEmail(ctx context.Context, request *proto.UserByEmai
 	}, nil
 }
 
-func (s *UsersServer) UserByID(ctx context.Context, request *proto.UserByIDRequest) (*proto.UserByIDResponse, error) {
-	user, err := s.usersRepository.UserByID(ctx, request.GetId())
+func (s *UsersServer) UsersByIDs(ctx context.Context, request *proto.UsersByIDsRequest) (*proto.UsersByIDsResponse, error) {
+	userIDs := request.GetIds()
+	if len(userIDs) == 0 {
+		return nil, status.Error(codes.InvalidArgument, "no ids provided")
+	}
+
+	users, err := s.usersRepository.UsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if user.ID == 0 {
-		return nil, status.Error(codes.NotFound, "user not found")
-	}
-
-	return &proto.UserByIDResponse{
-		User: hydrators.ProtoUser(user),
+	return &proto.UsersByIDsResponse{
+		Users: hydrators.ProtoUsers(users),
 	}, nil
 }
 
@@ -83,12 +87,13 @@ func (s *UsersServer) UpdateByID(ctx context.Context, request *proto.UpdateByIDR
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	if request.GetId() <= 0 {
+	userID := request.GetId()
+	if userID <= 0 {
 		return nil, status.Error(codes.InvalidArgument, "invalid id")
 	}
 
 	userToUpdate := models.UserOption{
-		ID:           request.GetId(),
+		ID:           userID,
 		Name:         mo.PointerToOption(request.Name),
 		Username:     mo.PointerToOption(request.Username),
 		Bio:          mo.PointerToOption(request.Bio),
@@ -108,18 +113,55 @@ func (s *UsersServer) UpdateByID(ctx context.Context, request *proto.UpdateByIDR
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	user, err := s.usersRepository.UserByID(ctx, request.GetId())
+	users, err := s.usersRepository.UsersByIDs(ctx, []int32{userID})
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 
-	if user.ID == 0 {
+	user, exist := lo.Find(users, func(user models.User) bool {
+		return user.ID == userID
+	})
+
+	if !exist {
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
 	return &proto.UpdateByIDResponse{
 		User: hydrators.ProtoUser(user),
 	}, nil
+}
+
+func (s *UsersServer) Follow(ctx context.Context, request *proto.FollowRequest) (*proto.FollowResponse, error) {
+	userID := request.GetUserId()
+	if userID <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid id")
+	}
+
+	targetUserID := request.GetTargetUserId()
+	if targetUserID <= 0 {
+		return nil, status.Error(codes.InvalidArgument, "invalid target id")
+	}
+
+	if userID == targetUserID {
+		return nil, status.Error(codes.InvalidArgument, "ids equals")
+	}
+
+	var (
+		ok  bool
+		err error
+	)
+
+	switch request.GetOperationType() {
+	case proto.FollowRequest_OPERATION_TYPE_UNFOLLOW:
+		ok, err = s.usersRepository.Unfollow(ctx, userID, targetUserID)
+	default:
+		ok, err = s.usersRepository.Follow(ctx, userID, targetUserID)
+	}
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &proto.FollowResponse{Ok: ok}, nil
 }
 
 func NewUsersServer(usersRepo UsersRepository) *UsersServer {

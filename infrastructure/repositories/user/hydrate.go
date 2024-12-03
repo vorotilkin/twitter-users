@@ -6,7 +6,7 @@ import (
 	"github.com/vorotilkin/twitter-users/schema/gen/my_database/public/model"
 )
 
-func toDomain(user model.User) models.User {
+func toDomain(user model.User, followingIDs []int32) models.User {
 	return models.User{
 		ID:           user.ID,
 		Name:         user.Name,
@@ -16,5 +16,6 @@ func toDomain(user model.User) models.User {
 		Bio:          lo.FromPtr(user.Bio),
 		ProfileImage: lo.FromPtr(user.ProfileImage),
 		CoverImage:   lo.FromPtr(user.CoverImage),
+		FollowingIDs: followingIDs,
 	}
 }
