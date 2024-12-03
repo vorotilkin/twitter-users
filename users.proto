@@ -1,6 +1,8 @@
 syntax = "proto3";
 
-option go_package = "/protousers";
+package users;
+
+option go_package = "/proto";
 
 service Users {
   rpc Create(CreateRequest) returns (CreateResponse);

@@ -4,7 +4,7 @@
 // - protoc             v5.28.3
 // source: users.proto
 
-package protousers
+package proto
 
 import (
 	context "context"
@@ -19,11 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Users_Create_FullMethodName              = "/Users/Create"
-	Users_PasswordHashByEmail_FullMethodName = "/Users/PasswordHashByEmail"
-	Users_UserByEmail_FullMethodName         = "/Users/UserByEmail"
-	Users_UserByID_FullMethodName            = "/Users/UserByID"
-	Users_UpdateByID_FullMethodName          = "/Users/UpdateByID"
+	Users_Create_FullMethodName              = "/users.Users/Create"
+	Users_PasswordHashByEmail_FullMethodName = "/users.Users/PasswordHashByEmail"
+	Users_UserByEmail_FullMethodName         = "/users.Users/UserByEmail"
+	Users_UserByID_FullMethodName            = "/users.Users/UserByID"
+	Users_UpdateByID_FullMethodName          = "/users.Users/UpdateByID"
 )
 
 // UsersClient is the client API for Users service.
@@ -244,7 +244,7 @@ func _Users_UpdateByID_Handler(srv interface{}, ctx context.Context, dec func(in
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
 var Users_ServiceDesc = grpc.ServiceDesc{
-	ServiceName: "Users",
+	ServiceName: "users.Users",
 	HandlerType: (*UsersServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
