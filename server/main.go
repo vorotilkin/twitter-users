@@ -8,7 +8,7 @@ import (
 	"github.com/vorotilkin/twitter-users/pkg/database"
 	pkgGrpc "github.com/vorotilkin/twitter-users/pkg/grpc"
 	"github.com/vorotilkin/twitter-users/pkg/migration"
-	"github.com/vorotilkin/twitter-users/protousers"
+	"github.com/vorotilkin/twitter-users/proto"
 	"github.com/vorotilkin/twitter-users/usecases"
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
@@ -55,7 +55,7 @@ func main() {
 			fx.As(new(grpc.ServiceRegistrar)),
 			fx.As(new(interfaces.Hooker)))),
 		fx.Provide(fx.Annotate(user.NewRepository, fx.As(new(usecases.UsersRepository)))),
-		fx.Provide(fx.Annotate(usecases.NewUsersServer, fx.As(new(protousers.UsersServer)))),
+		fx.Provide(fx.Annotate(usecases.NewUsersServer, fx.As(new(proto.UsersServer)))),
 		fx.Invoke(func(lc fx.Lifecycle, server interfaces.Hooker) {
 			lc.Append(fx.Hook{
 				OnStart: server.OnStart,
@@ -63,7 +63,7 @@ func main() {
 			})
 		}),
 		fx.Invoke(fx.Annotate(migration.Do, fx.ParamTags("", "", `name:"dsn"`))),
-		fx.Invoke(protousers.RegisterUsersServer),
+		fx.Invoke(proto.RegisterUsersServer),
 	}
 
 	app := fx.New(opts...)
