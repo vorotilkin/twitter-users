@@ -2,11 +2,11 @@ package hydrators
 
 import (
 	"github.com/vorotilkin/twitter-users/domain/models"
-	"github.com/vorotilkin/twitter-users/proto"
+	"github.com/vorotilkin/twitter-users/protousers"
 )
 
-func ProtoUser(user models.User) *proto.User {
-	return &proto.User{
+func ProtoUser(user models.User) *protousers.User {
+	return &protousers.User{
 		Id:           user.ID,
 		Name:         user.Name,
 		PasswordHash: user.PasswordHash,

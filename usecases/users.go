@@ -5,7 +5,7 @@ import (
 	"errors"
 	"github.com/samber/mo"
 	"github.com/vorotilkin/twitter-users/domain/models"
-	"github.com/vorotilkin/twitter-users/proto"
+	"github.com/vorotilkin/twitter-users/protousers"
 	"github.com/vorotilkin/twitter-users/usecases/hydrators"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -20,22 +20,22 @@ type UsersRepository interface {
 }
 
 type UsersServer struct {
-	proto.UnimplementedUsersServer
+	protousers.UnimplementedUsersServer
 	usersRepository UsersRepository
 }
 
-func (s *UsersServer) Create(ctx context.Context, request *proto.CreateRequest) (*proto.CreateResponse, error) {
+func (s *UsersServer) Create(ctx context.Context, request *protousers.CreateRequest) (*protousers.CreateResponse, error) {
 	user, err := s.usersRepository.Create(ctx, request.GetName(), request.GetPasswordHash(), request.GetUsername(), request.GetEmail())
 	if err != nil {
 		return nil, err
 	}
 
-	return &proto.CreateResponse{
+	return &protousers.CreateResponse{
 		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
-func (s *UsersServer) PasswordHashByEmail(ctx context.Context, request *proto.PasswordHashByEmailRequest) (*proto.PasswordHashByEmailResponse, error) {
+func (s *UsersServer) PasswordHashByEmail(ctx context.Context, request *protousers.PasswordHashByEmailRequest) (*protousers.PasswordHashByEmailResponse, error) {
 	hash, err := s.usersRepository.FetchPasswordHashByEmail(ctx, request.GetEmail())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -45,10 +45,10 @@ func (s *UsersServer) PasswordHashByEmail(ctx context.Context, request *proto.Pa
 		return nil, status.Error(codes.NotFound, "hash not found")
 	}
 
-	return &proto.PasswordHashByEmailResponse{PasswordHash: hash}, nil
+	return &protousers.PasswordHashByEmailResponse{PasswordHash: hash}, nil
 }
 
-func (s *UsersServer) UserByEmail(ctx context.Context, request *proto.UserByEmailRequest) (*proto.UserByEmailResponse, error) {
+func (s *UsersServer) UserByEmail(ctx context.Context, request *protousers.UserByEmailRequest) (*protousers.UserByEmailResponse, error) {
 	user, err := s.usersRepository.UserByEmail(ctx, request.GetEmail())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -58,12 +58,12 @@ func (s *UsersServer) UserByEmail(ctx context.Context, request *proto.UserByEmai
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &proto.UserByEmailResponse{
+	return &protousers.UserByEmailResponse{
 		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
-func (s *UsersServer) UserByID(ctx context.Context, request *proto.UserByIDRequest) (*proto.UserByIDResponse, error) {
+func (s *UsersServer) UserByID(ctx context.Context, request *protousers.UserByIDRequest) (*protousers.UserByIDResponse, error) {
 	user, err := s.usersRepository.UserByID(ctx, request.GetId())
 	if err != nil {
 		return nil, status.Error(codes.Internal, err.Error())
@@ -73,12 +73,12 @@ func (s *UsersServer) UserByID(ctx context.Context, request *proto.UserByIDReque
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &proto.UserByIDResponse{
+	return &protousers.UserByIDResponse{
 		User: hydrators.ProtoUser(user),
 	}, nil
 }
 
-func (s *UsersServer) UpdateByID(ctx context.Context, request *proto.UpdateByIDRequest) (*proto.UpdateByIDResponse, error) {
+func (s *UsersServer) UpdateByID(ctx context.Context, request *protousers.UpdateByIDRequest) (*protousers.UpdateByIDResponse, error) {
 	if request == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -117,7 +117,7 @@ func (s *UsersServer) UpdateByID(ctx context.Context, request *proto.UpdateByIDR
 		return nil, status.Error(codes.NotFound, "user not found")
 	}
 
-	return &proto.UpdateByIDResponse{
+	return &protousers.UpdateByIDResponse{
 		User: hydrators.ProtoUser(user),
 	}, nil
 }
