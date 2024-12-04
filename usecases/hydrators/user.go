@@ -23,5 +23,6 @@ func ProtoUser(user models.User) *proto.User {
 		ProfileImage:     user.ProfileImage,
 		CoverImage:       user.CoverImage,
 		FollowingUserIds: user.FollowingIDs,
+		FollowerUserIds:  user.FollowerIDs,
 	}
 }

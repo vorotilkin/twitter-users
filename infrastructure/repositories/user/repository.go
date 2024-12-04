@@ -12,6 +12,8 @@ import (
 	"github.com/vorotilkin/twitter-users/schema/gen/my_database/public/table"
 )
 
+const defaultNewUsersLimit = 10
+
 type Repository struct {
 	conn *database.Database
 }
@@ -82,6 +84,12 @@ func (r *Repository) UsersByIDs(ctx context.Context, ids []int32) ([]models.User
 			table.Follow.UserID.EQ(table.User.ID),
 		)
 
+	followersSubquery :=
+		table.Follow.SELECT(
+			postgres.Raw("ARRAY_AGG(follow.user_id)")).WHERE(
+			table.Follow.FollowingUserID.EQ(table.User.ID),
+		)
+
 	query, args := table.User.
 		SELECT(
 			table.User.ID,
@@ -93,6 +101,7 @@ func (r *Repository) UsersByIDs(ctx context.Context, ids []int32) ([]models.User
 			table.User.ProfileImage,
 			table.User.CoverImage,
 			followingSubquery.AS("following_ids"),
+			followersSubquery.AS("followers_ids"),
 		).
 		WHERE(table.User.ID.IN(userIDs...)).
 		Sql()
@@ -110,7 +119,7 @@ func (r *Repository) UsersByIDs(ctx context.Context, ids []int32) ([]models.User
 	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.User, error) {
 		user := model.User{}
 
-		var followingIDs []int32
+		var followingIDs, followerIDs []int32
 
 		err := row.Scan(
 			&user.ID,
@@ -122,12 +131,13 @@ func (r *Repository) UsersByIDs(ctx context.Context, ids []int32) ([]models.User
 			&user.ProfileImage,
 			&user.CoverImage,
 			&followingIDs,
+			&followerIDs,
 		)
 		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 			return models.User{}, err
 		}
 
-		return toDomain(user, followingIDs), nil
+		return toDomain(user, followingIDs, followerIDs), nil
 	})
 }
 
@@ -163,7 +173,7 @@ func (r *Repository) UserByEmail(ctx context.Context, email string) (models.User
 		return models.User{}, err
 	}
 
-	return toDomain(user, nil), nil
+	return toDomain(user, nil, nil), nil
 }
 
 func (r *Repository) Create(ctx context.Context, name, passwordHash, username, email string) (models.User, error) {
@@ -198,7 +208,7 @@ func (r *Repository) Create(ctx context.Context, name, passwordHash, username, e
 		return models.User{}, err
 	}
 
-	return toDomain(user, nil), nil
+	return toDomain(user, nil, nil), nil
 }
 
 func (r *Repository) FetchPasswordHashByEmail(ctx context.Context, email string) (string, error) {
@@ -253,6 +263,75 @@ func (r *Repository) Unfollow(ctx context.Context, userID, targetUserID int32) (
 	}
 
 	return commandTag.RowsAffected() > 0, nil
+}
+
+func (r *Repository) NewUsers(ctx context.Context, limit int32) ([]models.User, error) {
+	if limit == 0 {
+		limit = defaultNewUsersLimit
+	}
+
+	followingSubquery :=
+		table.Follow.SELECT(
+			postgres.Raw("ARRAY_AGG(follow.following_user_id)")).WHERE(
+			table.Follow.UserID.EQ(table.User.ID),
+		)
+
+	followersSubquery :=
+		table.Follow.SELECT(
+			postgres.Raw("ARRAY_AGG(follow.user_id)")).WHERE(
+			table.Follow.FollowingUserID.EQ(table.User.ID),
+		)
+
+	query, args := table.User.
+		SELECT(
+			table.User.ID,
+			table.User.Name,
+			table.User.PasswordHash,
+			table.User.Username,
+			table.User.Email,
+			table.User.Bio,
+			table.User.ProfileImage,
+			table.User.CoverImage,
+			followingSubquery.AS("following_ids"),
+			followersSubquery.AS("followers_ids"),
+		).
+		ORDER_BY(table.User.CreatedAt.DESC()).
+		LIMIT(int64(limit)).
+		Sql()
+
+	rows, err := r.conn.Query(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
+
+	defer rows.Close()
+
+	return pgx.CollectRows(rows, func(row pgx.CollectableRow) (models.User, error) {
+		user := model.User{}
+
+		var followingIDs, followerIDs []int32
+
+		err := row.Scan(
+			&user.ID,
+			&user.Name,
+			&user.PasswordHash,
+			&user.Username,
+			&user.Email,
+			&user.Bio,
+			&user.ProfileImage,
+			&user.CoverImage,
+			&followingIDs,
+			&followerIDs,
+		)
+		if err != nil && !errors.Is(err, pgx.ErrNoRows) {
+			return models.User{}, err
+		}
+
+		return toDomain(user, followingIDs, followerIDs), nil
+	})
 }
 
 func NewRepository(conn *database.Database) *Repository {

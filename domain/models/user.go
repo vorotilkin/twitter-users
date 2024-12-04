@@ -12,6 +12,7 @@ type User struct {
 	ProfileImage string
 	CoverImage   string
 	FollowingIDs []int32
+	FollowerIDs  []int32
 }
 
 type UserOption struct {

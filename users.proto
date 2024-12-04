@@ -11,6 +11,7 @@ service Users {
   rpc UsersByIDs(UsersByIDsRequest) returns (UsersByIDsResponse);
   rpc UpdateByID(UpdateByIDRequest) returns (UpdateByIDResponse);
   rpc Follow(FollowRequest) returns (FollowResponse);
+  rpc NewUsers(NewUsersRequest) returns (NewUsersResponse);
 }
 
 message User {
@@ -23,6 +24,7 @@ message User {
   string profile_image = 7;
   string cover_image = 8;
   repeated int32 following_user_ids = 9;
+  repeated int32 follower_user_ids = 10;
 }
 
 message CreateRequest {
@@ -85,4 +87,12 @@ message FollowRequest {
 
 message FollowResponse {
   bool ok = 1;
+}
+
+message NewUsersRequest {
+  int32 limit = 1;
+}
+
+message NewUsersResponse {
+  repeated User users = 1;
 }

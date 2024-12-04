@@ -20,6 +20,7 @@ type UsersRepository interface {
 	UpdateByID(ctx context.Context, userToUpdate models.UserOption) (bool, error)
 	Follow(ctx context.Context, userID, targetUserID int32) (bool, error)
 	Unfollow(ctx context.Context, userID, targetUserID int32) (bool, error)
+	NewUsers(ctx context.Context, limit int32) ([]models.User, error)
 }
 
 type UsersServer struct {
@@ -162,6 +163,15 @@ func (s *UsersServer) Follow(ctx context.Context, request *proto.FollowRequest) 
 	}
 
 	return &proto.FollowResponse{Ok: ok}, nil
+}
+
+func (s *UsersServer) NewUsers(ctx context.Context, request *proto.NewUsersRequest) (*proto.NewUsersResponse, error) {
+	users, err := s.usersRepository.NewUsers(ctx, request.GetLimit())
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return &proto.NewUsersResponse{Users: hydrators.ProtoUsers(users)}, nil
 }
 
 func NewUsersServer(usersRepo UsersRepository) *UsersServer {
